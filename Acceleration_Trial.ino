@@ -1,4 +1,6 @@
 #include "M5Atom.h"
+#include "FastLED.h"
+#include "pixeltypes.h"
 
 bool IMU6886Flag = false;
 
@@ -13,9 +15,12 @@ void setup() {
 void loop() {
 
   //opens red LED at center
-  M5.dis.drawpix(12, 0x00F000); 
+  M5.dis.fillpix(0xFFFFFF);
   M5.update();
-  delay(50);
+  delay(500);
+  M5.dis.clear();
+  M5.update();
+  delay(500);
 
   //determines acceleration values in x, y, z directions
   float accX = 0, accY = 0, accZ = 0;
@@ -30,9 +35,17 @@ void loop() {
   //turns off LED when threshold reached
   if(accX >= 1 || accX <= -1)
   {
-    M5.dis.drawpix(12, 0x000000);
+    M5.dis.fillpix(0xFFFFFF);
     M5.update();
-    delay(50);
+    delay(1500);
+  }
+
+
+  if(accZ >= 1 || accZ <= -1)
+  {
+    M5.dis.fillpix(0xFFFFFF);
+    M5.update();
+    delay(1500);
   }
   
   M5.update();
