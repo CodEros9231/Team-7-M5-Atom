@@ -19,26 +19,39 @@ extern const unsigned char image_degree[152];
 extern const unsigned char image_negative[122];
 
 //sets value of temperature, to be changed once temperature is actually read
-int Temp = -21;
+float temp;
 
 void setup()
 {
     M5.begin(true, false, true);
+    M5.IMU.Init();
     //delay(10);
    
 }
 
 //ensures code is only run once
 int ctr = 0;
+double start, finished, elapsed;
 
 void loop()
 {
   //declare values for units in tens and ones place
   int TempTens = 0;
   int TempOnes = 0;
+  int Temp = temp;
+
+  M5.IMU.getTempData(&temp);
+  Serial.print("The temperature is ");
+  Serial.println(temp);    // print the number
+  start=millis();
+  delay(10000);
+  finished=millis();
+  elapsed=(finished-start)/1000.000;
+  Serial.print(elapsed);
+  Serial.println(" seconds elapsed");
   
-  if (ctr < 1)
-  {
+//  if (ctr < 1)
+//  {
       //check if number is negative
       if(Temp < 0)
       {
@@ -220,8 +233,8 @@ void loop()
 
 
   //increment counter
-  ctr++;
-  }
+//  ctr++;
+//  }
 
   //clear display when done
   M5.dis.clear();
