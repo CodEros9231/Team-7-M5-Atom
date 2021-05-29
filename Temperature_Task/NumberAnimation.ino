@@ -1,16 +1,4 @@
-/****************************************************************
- * 
- * This Example is used to test button
- * 
- * Arduino tools Setting 
- * -board : M5StickC
- * -Upload Speed: 115200 / 750000 / 1500000
- * 
-****************************************************************/
-
 #include "M5Atom.h"
-
-bool IMU6886Flag = false;
 
 extern const unsigned char image_num0B[122];
 extern const unsigned char image_num1B[122];
@@ -38,14 +26,18 @@ void loop()
 
   if (FSM < 1)
   {
-//  M5.dis.animation((uint8_t *)image_num40, 200, LED_DisPlay::kMoveLeft, 20);
+  
+  //Show the tens number
   M5.dis.animation((uint8_t *)image_num4B, 150, LED_DisPlay::kMoveLeft, 20);
   delay(750);
   M5.update();
-//  M5.dis.clear();
+
+  //Show the ones number
   M5.dis.animation((uint8_t *)image_num3B, 150, LED_DisPlay::kMoveLeft, 20);
   delay(850);
   M5.update();
+
+  //Show the unit (celcius)
   M5.dis.animation((uint8_t *)image_degree, 150, LED_DisPlay::kMoveLeft, 20);
   delay(1000);
   M5.update();
