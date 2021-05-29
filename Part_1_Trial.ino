@@ -1,28 +1,17 @@
 
 
 #include "M5Atom.h"
+#include "FastLED.h"
 
-uint8_t DisBuff[2 + 5 * 5 * 3];
 
-void setBuff(uint8_t Rdata, uint8_t Gdata, uint8_t Bdata) //sets hex color values for entire LED grid by R G B
-{
-    DisBuff[0] = 0x05;
-    DisBuff[1] = 0x05;
-    for (int i = 0; i < 25; i++)
-    {
-        DisBuff[2 + i * 3 + 0] = Rdata; //RED
-        DisBuff[2 + i * 3 + 1] = Gdata; //GREEN
-        DisBuff[2 + i * 3 + 2] = Bdata; //BLUE
-    }
-}
-
+bool IMU6886Flag = false;
 
 void setup() //default start state of Atom
 {
     M5.begin(true, false, true);
-    delay(10);
-    setBuff(0x00, 0x00, 0x00); //sets the light color at the beginning to off
-    M5.dis.displaybuff(DisBuff);
+    delay(50);
+    if (!M5.IMU.Init()) IMU6886Flag = true; //sets flag to true
+
 }
 
 uint8_t FSM = 0; //set counter for button presses
@@ -31,47 +20,150 @@ void loop()
 {
     if (M5.Btn.wasPressed()) //if button pressed
     {
+      FSM++; //increment counter
+        if (FSM >= 5) //if counter exceeds number of states
+        {
+            FSM = 0; //reset counter
+        }
+        M5.dis.clear(); //clear LEDs
+            M5.update(); //update
+            delay(50);
+    }
 
-        switch (FSM)
+     //Switch case for the current state of the LEDs
+     switch (FSM)
         {
         case 0: //LED off
-            setBuff(0x00, 0x00, 0x00);
-            break;
-        case 1: //LED Red
-            setBuff(0xff, 0x00, 0x00);
-            break;
-        case 2: //LED White
-            setBuff(0xff, 0xff, 0xff);
-            break;
-        case 3: //LED Red
-            setBuff(0xff, 0x00, 0x00);
-            break;
-        case 4: //LED White
-            setBuff(0xff, 0xff, 0xff);
-            break;
-        default:
-            break;
-        }
-        M5.dis.displaybuff(DisBuff);
-
-        FSM++;
-        if (FSM >= 5)
         {
-            FSM = 0;
+            M5.dis.clear();
+            M5.update();
+            delay(200);
+            break;
         }
-    }
+        
+        case 1: //LED Red Manual
+        {
+            //Turn all LEDs on to Red
+            M5.dis.fillpix(0x008000);
+            M5.update();
+            delay(200); //interval of 200 ms
+
+            //Turn all LEDs off
+            M5.dis.clear();
+            M5.update();
+            delay(200); 
+
+            //exit
+            break;
+        }
+        
+        case 2: //LED White
+        {
+            //Turn all LEDs on to White
+            M5.dis.fillpix(0xFFFFFF);
+            M5.update();
+            delay(200); //interval of 200 ms
+
+            //Turn all LEDs off
+            M5.dis.clear();
+            M5.update();
+            delay(200);
+
+            //exit loop
+            break;
+        }
+        
+        case 3: //LED Red Automatic
+        {
+            //!!Do normal blink behavior!!
+
+            //Turn all LEDs on to Red
+            M5.dis.fillpix(0x008000);
+            M5.update();
+            delay(200);
+
+            //Turn all LEDs off
+            M5.dis.clear();
+            M5.update();
+            delay(200);
+            
+            //determine acceleration values in x, y, z directions
+            float accX = 0, accY = 0, accZ = 0;
+            
+            //get and store acceleration data
+            if (IMU6886Flag == true) 
+            {
+                M5.IMU.getAccelData(&accX, &accY, &accZ);
+            }
+
+            //Keeps LED on when threshold reached on X axis
+            if(accX >= 1 || accX <= -1)
+            {
+                M5.dis.fillpix(0x008000);
+                M5.update();
+                delay(1500);
+            }
+
+            //Keeps LED on when threshold reached on Z axis
+            if(accZ >= 1 || accZ <= -1)
+            {
+                M5.dis.fillpix(0x008000);
+                M5.update();
+                delay(1500);
+             }
+
+            //exit loop
+            break;
+        }
+        
+        case 4: //LED White Automatic
+        {
+            //!!Do normal blink behavior!!
+
+            //Turn all LEDs on to White
+            M5.dis.fillpix(0xFFFFFF);
+            M5.update();
+            delay(200);
+
+            //TUrn all LEDs off
+            M5.dis.clear();
+            M5.update();
+            delay(200);
+            
+            //determine acceleration values in x, y, z directions
+            float accX = 0, accY = 0, accZ = 0;
+            if (IMU6886Flag == true) 
+            {
+                M5.IMU.getAccelData(&accX, &accY, &accZ);
+            }
+
+            //Keeps LED on when threshold reached in X axis
+            if(accX >= 1 || accX <= -1)
+            {
+                M5.dis.fillpix(0xFFFFFF);
+                M5.update();
+                delay(1500);
+            }
+
+            //Keeps LED on when threshold reached in Z axis
+            if(accZ >= 1 || accZ <= -1)
+            {
+                M5.dis.fillpix(0xFFFFFF);
+                M5.update();
+                delay(1500);
+             }
+
+            //exit loop
+            break;
+        }
+
+        default: //default case
+            break; //exit loop
+        }
+  
+//  Serial.println(FSM); //prints counter of button presses
+//  delay(500);
 
     delay(50);
     M5.update();
 }
-
-
-/*
- while (FSM == 1)
-            {
-                setBuff(0xff, 0xff, 0xff);
-                delay(1000);
-                setBuff(0x00, 0x00, 0x00);
-                delay(1000);
-            }
- */
