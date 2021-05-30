@@ -301,7 +301,7 @@ void loop()
      
       switch(optionsCTR)
       {
-        case 0:
+        case 0: //Show Active Temperature + Units
         {
           if(modeState == false)
           {
@@ -337,7 +337,7 @@ void loop()
           
         }
     
-        case 1:
+        case 1: //Show average of last 24 hours of temperature + Units
         {
           M5.dis.displaybuff((uint8_t *)image_num2W, 0, 0);
           M5.update();
@@ -362,7 +362,7 @@ void loop()
            
         }
 
-        case 2:
+        case 2: //Show color scale of temperature range + current temperature as color
         {
           M5.dis.displaybuff((uint8_t *)image_num3W, 0, 0);
           M5.update();
@@ -387,7 +387,7 @@ void loop()
            
         }
 
-        case 3:
+        case 3: //Show graph of temperature across a predefined range.
         {
           M5.dis.displaybuff((uint8_t *)image_num4W, 0, 0);
           M5.update();
@@ -412,7 +412,7 @@ void loop()
            
         }
 
-        case 4:
+        case 4: //Change units
         {
           M5.dis.displaybuff((uint8_t *)image_num5W, 0, 0);
           M5.update();
