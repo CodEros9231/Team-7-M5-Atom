@@ -16,6 +16,9 @@ extern const unsigned char image_num8B[122];
 extern const unsigned char image_num9B[122];
 extern const unsigned char image_degree[152];
 extern const unsigned char image_negative[122];
+extern const unsigned char image_colorscale[77];
+
+
 
 //sets value of temperature, to be changed once temperature is actually read
 float temp = 0;
@@ -289,7 +292,9 @@ void loop()
         
         case 2: //Show color scale of temperature range + current temperature as color
         {
-            
+           M5.dis.animation((uint8_t *)image_colorscale, 0, LED_DisPlay::kMoveLeft, 15);// color in the order  VBGYR from left to right
+          
+            //M5.dis((uint8_t *)image_colorscale)
             break;
         }
         
