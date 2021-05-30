@@ -20,24 +20,29 @@ extern const unsigned char image_negative[122];
 //sets value of temperature, to be changed once temperature is actually read
 float temp = 0;
 int Temp = 0;
+int TempArray[8640];
+int SumofTemp=0;
 
 int ctr = 0;
+int tempCounts=0;
 
-double start, finished, elapsed;
+//double currentTime, lastUpdateTime, elapsed;
+unsigned long currentTime=0;
 
+void delayInterval(int num)
+{ currentTime=millis();
+ while (millis()<(currentTime+num))
+ {
+  
+ }
+}
 
 //reads the temperature at a given interval
 float readTemp()
 {
     M5.IMU.getTempData(&temp);
     Serial.print("The temperature is ");
-    Serial.println(temp);    // print the number
-    start=millis();
-    delay(3000);
-    finished=millis();
-    elapsed=(finished-start)/1000.000;
-    Serial.print(elapsed);
-    Serial.println(" seconds elapsed");
+    Serial.println(temp);    // print the temperature value
     return temp;
 }
 
@@ -49,20 +54,10 @@ void checkNegative(int tempValue)
     {
     //display negative sign before value
     M5.dis.animation((uint8_t *)image_negative, 150, LED_DisPlay::kMoveLeft, 20);
-    delay(750);
+    delayInterval(750);
     M5.update();
     }
 }
-
-//change negative temp value to positive
-int changeNegative (int &Temp)
-{
-  if(Temp < 0)
-    {
-      Temp = Temp * -1; //turn to positive value for numeral detection
-    }
-}
-
 //displays the unit in the tens place
 void displayTens(int &TempTens, int Temp)
 {
@@ -81,67 +76,60 @@ void displayTens(int &TempTens, int Temp)
               case 1: //display 1
               {
                   M5.dis.animation((uint8_t *)image_num1B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(750);
-                  M5.update();
+                  
                   break;
               }
               case 2: //display 2
               {
                   M5.dis.animation((uint8_t *)image_num2B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(750);
-                  M5.update();
+                  
                   break;
               }
               case 3: //display 3
               {
                   M5.dis.animation((uint8_t *)image_num3B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(750);
-                  M5.update();
+                  
                   break;
               }
               case 4: //display 4
               {
                   M5.dis.animation((uint8_t *)image_num4B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(750);
-                  M5.update();
+                 
                   break;
               }
               case 5: //display 5
               {
                   M5.dis.animation((uint8_t *)image_num5B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(750);
-                  M5.update();
+                  
                   break;
               }
               case 6: //display 6
               {
                   M5.dis.animation((uint8_t *)image_num6B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(750);
-                  M5.update();
+                  
                   break;
               }
               case 7: //display 7
               {
                   M5.dis.animation((uint8_t *)image_num7B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(750);
-                  M5.update();
+                
                   break;
               }
               case 8: //display 8
               {
                   M5.dis.animation((uint8_t *)image_num8B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(750);
-                  M5.update();
+                  
                   break;
               }
               case 9: //display 9
               {
                   M5.dis.animation((uint8_t *)image_num9B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(750);
-                  M5.update();
+                 
                   break;
               }
             }
+            delayInterval(750);
+            M5.update();
 }
 
 //displays the unit in the ones place
@@ -155,85 +143,74 @@ void displayOnes(int TempTens, int Temp, int &TempOnes)
               case 0: //display 0
               {
                   M5.dis.animation((uint8_t *)image_num0B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+                  
                   break;
               }
       
               case 1: //display 1
               {
                   M5.dis.animation((uint8_t *)image_num1B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+                 
                   break;
               }
               case 2: //display 2
               {
                   M5.dis.animation((uint8_t *)image_num2B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+                 
                   break;
               }
               case 3: //display 3
               {
                   M5.dis.animation((uint8_t *)image_num3B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+               
                   break;
               }
               case 4: //display 4
               {
                   M5.dis.animation((uint8_t *)image_num4B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+                  
                   break;
               }
               case 5: //display 5
               {
                   M5.dis.animation((uint8_t *)image_num5B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+                 
                   break;
               }
               case 6: //display 6
               {
                   M5.dis.animation((uint8_t *)image_num6B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+                  
                   break;
               }
               case 7: //display 7
               {
                   M5.dis.animation((uint8_t *)image_num7B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+                  
                   break;
               }
               case 8: //display 8
               {
                   M5.dis.animation((uint8_t *)image_num8B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+                
                   break;
               }
               case 9: //display 9
               {
                   M5.dis.animation((uint8_t *)image_num9B, 150, LED_DisPlay::kMoveLeft, 20);
-                  delay(850);
-                  M5.update();
+                  
                   break;
               }
             }
+            delayInterval(850);
+            M5.update();
 }
-
 
 
 void setup()
 {
     M5.begin(true, false, true);
-    M5.IMU.Init();
-    //delay(10);
-   
+    M5.IMU.Init();   
 }
 
 void loop()
@@ -259,11 +236,11 @@ void loop()
         }
         M5.dis.clear(); //clear LEDs
             M5.update(); //update
-            delay(50);
+            delayInterval(50);
     }
 
   Serial.println(ctr); //prints counter of button presses
-  delay(500);
+ //delayInterval(500);
 
   
   
@@ -271,7 +248,15 @@ void loop()
   int TempTens = 0;
   int TempOnes = 0;
   int Temp = readTemp();
-
+  TempArray[tempCounts]=Temp;
+  SumofTemp+=Temp;
+  if (tempCounts>=8640)
+  {
+      SumofTemp=SumofTemp-TempArray[0];
+      tempCounts=0;
+  }
+  
+  delayInterval(7000);// for 10 seconds use 7000
      //Switch case for the current state of the LEDs
      switch (ctr)
         {
@@ -279,7 +264,7 @@ void loop()
         {
             //check if number is negative
             checkNegative(Temp);
-            changeNegative(Temp);
+            Temp=abs(Temp);
 
             //display the number in the tens place
             displayTens(TempTens, Temp);
@@ -289,7 +274,7 @@ void loop()
       
             //display the unit (celsius)
             M5.dis.animation((uint8_t *)image_degree, 150, LED_DisPlay::kMoveLeft, 20);
-            delay(1000);
+            delayInterval(1000);
             M5.update();
       
             break;
@@ -297,7 +282,8 @@ void loop()
         
         case 1: //Show average of last 24 hours of temperature + Units
         {
-            
+             Serial.print("The average temperature is ");
+             Serial.println(SumofTemp/8640);// 1 day is 86400 s
             break;
         }
         
@@ -323,13 +309,13 @@ void loop()
             break; //exit loop
         }
 
-//–––––––––––––––––––––––––––––––––  
+ 
 
  
 
   //clear display when done
   M5.dis.clear();
-  delay(500);
+  delayInterval(500);
   M5.update();
 
 }
