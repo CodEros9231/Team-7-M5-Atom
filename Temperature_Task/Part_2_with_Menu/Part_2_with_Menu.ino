@@ -3,6 +3,12 @@
 
 #include "M5Atom.h"
 
+extern const unsigned char image_num1W[77];
+extern const unsigned char image_num2W[77];
+extern const unsigned char image_num3W[77];
+extern const unsigned char image_num4W[77];
+extern const unsigned char image_num5W[77];
+
 bool IMU6886Flag = false;
 bool atomState = false;
 bool modeState = false;
@@ -43,6 +49,11 @@ void loop()
     atomState = true;
   }
 
+  if(M5.Btn.wasPressed()) //face up
+  {
+    atomState = true;
+  }
+
   //print states of functions
   Serial.printf("%d,%i,%d\n", atomState, optionsCTR, modeState);
   delayInterval(500);
@@ -55,17 +66,17 @@ void loop()
       //get current pitch and roll
       M5.IMU.getAttitude(&pitch, &roll);
       
-      if(pitch > 10)
+      if(pitch < -10)
       {
         optionsCTR++;
-        if (optionsCTR >= 4) //if counter exceeds number of states
+        if (optionsCTR >= 5) //if counter exceeds number of states
         {
            optionsCTR = 0; //reset counter
         }
         delay(500); //so that no other values are read
       }
     
-      else if(pitch < -10)
+      else if(pitch > 10)
       {
         optionsCTR--;
         if (optionsCTR <= -1) //if counter exceeds number of states
@@ -80,9 +91,8 @@ void loop()
       {
         case 0:
         {
-          M5.dis.fillpix(0xFFFFFF);
+          M5.dis.displaybuff((uint8_t *)image_num1W, 0, 0);
           M5.update();
-          delayInterval(1000);
 
           if(M5.Btn.wasPressed())
           {
@@ -106,9 +116,8 @@ void loop()
     
         case 1:
         {
-          M5.dis.fillpix(0x0000FF);
+          M5.dis.displaybuff((uint8_t *)image_num2W, 0, 0);
           M5.update();
-          delayInterval(1000);
 
           if(M5.Btn.wasPressed())
           {
@@ -130,11 +139,60 @@ void loop()
            
         }
 
+        case 2:
+        {
+          M5.dis.displaybuff((uint8_t *)image_num3W, 0, 0);
+          M5.update();
+
+          if(M5.Btn.wasPressed())
+          {
+            modeState = true;
+          }
+
+          if(modeState == true)
+          {
+            M5.dis.fillpix(0x008000);
+            M5.update();
+            delayInterval(500);
+
+            M5.dis.clear();
+            M5.update();
+            delayInterval(500);
+          }
+
+          break;
+           
+        }
+
         case 3:
         {
-          M5.dis.fillpix(0x008000);
+          M5.dis.displaybuff((uint8_t *)image_num4W, 0, 0);
           M5.update();
-          delayInterval(1000);
+
+          if(M5.Btn.wasPressed())
+          {
+            modeState = true;
+          }
+
+          if(modeState == true)
+          {
+            M5.dis.fillpix(0x008000);
+            M5.update();
+            delayInterval(500);
+
+            M5.dis.clear();
+            M5.update();
+            delayInterval(500);
+          }
+
+          break;
+           
+        }
+
+        case 4:
+        {
+          M5.dis.displaybuff((uint8_t *)image_num5W, 0, 0);
+          M5.update();
 
           if(M5.Btn.wasPressed())
           {
