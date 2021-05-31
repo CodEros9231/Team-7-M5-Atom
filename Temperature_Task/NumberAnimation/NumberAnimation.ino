@@ -1,6 +1,8 @@
 
 #include "M5Atom.h"
+ #define NUM_LEDS 160
 
+  CRGB leds[ NUM_LEDS ];
 bool IMU6886Flag = false;
 
 //Links all LED data for each number and symbol
@@ -25,6 +27,7 @@ float temp = 0;
 int Temp = 0;
 int TempArray[8640];
 int SumofTemp=0;
+double FahrenheitTemp;
 
 int ctr = 0;
 int tempCounts=0;
@@ -261,19 +264,20 @@ void loop()
   
   delayInterval(7000);// for 10 seconds use 7000
      //Switch case for the current state of the LEDs
-     switch (ctr)
+     int dumdum=2;//dumdum is dummy change later to ctr=0
+     switch (dumdum)
         {
         case 0: //Show Active Temperature + Units
         {
             //check if number is negative
             checkNegative(Temp);
-            Temp=abs(Temp);
+            //Temp=abs(Temp);
 
             //display the number in the tens place
-            displayTens(TempTens, Temp);
+            displayTens(TempTens, abs(Temp));
 
             //display number in the ones place
-            displayOnes(TempTens, Temp, TempOnes);
+            displayOnes(TempTens, abs(Temp), TempOnes);
       
             //display the unit (celsius)
             M5.dis.animation((uint8_t *)image_degree, 150, LED_DisPlay::kMoveLeft, 20);
@@ -293,9 +297,23 @@ void loop()
         case 2: //Show color scale of temperature range + current temperature as color
         {
            M5.dis.animation((uint8_t *)image_colorscale, 0, LED_DisPlay::kMoveLeft, 15);// color in the order  VBGYR from left to right
+           if (Temp>20)
+           {
+           for (int i = 0; i <= 24; i++)
+           {
           
-            //M5.dis((uint8_t *)image_colorscale)
+             
+            if (leds[i])
+              {
+                M5.dis.drawpix(i, 0xff0000);
+                delayInterval(100000);
+              }
+              
+             //if  (M5.state==0) 
+                  ctr++;
+//           //checkwhichcolor();
             break;
+           }
         }
         
         case 3: //Show graph of temperature across a predefined range.
@@ -306,6 +324,8 @@ void loop()
         
         case 4: //Change units
         {
+            FahrenheitTemp=(1.8*Temp)+32;
+            
             
             break;
         }
@@ -322,5 +342,5 @@ void loop()
   M5.dis.clear();
   delayInterval(500);
   M5.update();
-
+        }
 }

@@ -1,6 +1,3 @@
-
-
-
 #include "M5Atom.h"
 
 extern const unsigned char image_num1W[77];
@@ -21,7 +18,9 @@ extern const unsigned char image_num8B[122];
 extern const unsigned char image_num9B[122];
 extern const unsigned char image_degree[152];
 extern const unsigned char image_negative[122];
-
+extern const unsigned char image_smallercolorscale[77];
+#define NUM_LEDS 160
+CRGB leds[ NUM_LEDS ];
 bool IMU6886Flag = false;
 bool atomState = false;
 bool modeState = false;
@@ -36,6 +35,13 @@ float temp = 0;
 int Temp = 0;
 int TempArray[8640];
 int SumofTemp=0;
+float AveTemp = 0;
+
+float currentTemp = 0;
+float averageTemp = 0;
+
+unsigned long intervalTime = 0;
+bool resetInterval = false;
 
 int ctr = 0;
 int tempCounts=0;
@@ -48,34 +54,49 @@ int TempOnes = 0;
 unsigned long currentTime=0;
 
 void delayInterval(int num)
-{ currentTime=millis();
- while (millis()<(currentTime+num))
- {
-    //do nothing
- }
+{ 
+  currentTime=millis();
+  while (millis()<(currentTime+num))
+   {
+      //do nothing
+   }
 }
 
 //reads the temperature at a given interval
-float readTemp()
+void readTemp(float &currentTemp, float &averageTemp)
 {
-    M5.IMU.getTempData(&temp);
-    Serial.print("The temperature is ");
-    Serial.println(temp);    // print the temperature value
-    return temp;
-}
-
-//records temperature at given interval
-void recTemp()
-{
-  int Temp = readTemp();
-  TempArray[tempCounts]=Temp;
-  SumofTemp+=Temp;
-  if (tempCounts>=8640)
+  if(resetInterval == false)
   {
-      SumofTemp=SumofTemp-TempArray[0];
-      tempCounts=0;
+    intervalTime = 0;
+    intervalTime = millis();
+    resetInterval = true;
+  }
+  
+  if(millis() >= intervalTime + 5000) //trial with 5 seconds, replace with 600,000 for 10 minutes
+  {
+    M5.IMU.getTempData(&currentTemp);
+    Serial.print("The temperature is ");
+    Serial.println(currentTemp);    // print the temperature value
+
+    TempArray[tempCounts] = currentTemp;
+    SumofTemp += currentTemp;
+    tempCounts++;
+
+    averageTemp = SumofTemp / tempCounts;
+    Serial.print("The average temperature is ");
+    Serial.println(averageTemp);    // print the average temperature value
+
+    if (tempCounts >= 8640)
+    {
+        SumofTemp=SumofTemp-TempArray[0];
+        tempCounts=0;
+    }
+
+    resetInterval = false;
+    
   }
 }
+
 
 //check if temperature value is negative
 void checkNegative(int tempValue)
@@ -242,26 +263,36 @@ void setup() {
   // put your setup code here, to run once:
     M5.begin(true, true, true);
     M5.IMU.Init();
+
+    M5.IMU.getTempData(&currentTemp);
+    Serial.print("The temperature is ");
+    Serial.println(currentTemp);    // print the temperature value
+
+    TempArray[tempCounts] = currentTemp;
+    SumofTemp += currentTemp;
+    tempCounts++;
+
+    averageTemp = SumofTemp / tempCounts;
+    Serial.print("The average temperature is ");
+    Serial.println(averageTemp);    // print the average temperature value
 }
 
 void loop() 
 {
-  //put temperature function here
-  recTemp();
-  //delayInterval(7000);// for 10 seconds use 7000
+
+  readTemp(currentTemp, averageTemp);
   
-  //get current pitch and roll
   M5.IMU.getAttitude(&pitch, &roll);
 
-  if(roll > -10 && roll < 0 && pitch > roll && pitch < 0) //face up
+  if((roll > -10 && roll < 0 && pitch > roll && pitch < 0) || M5.Btn.wasPressed()) //face up
   {
     atomState = true;
   }
 
-  if(M5.Btn.wasPressed()) //face up
-  {
-    atomState = true;
-  }
+//  if(M5.Btn.wasPressed()) //button pressed
+//  {
+//    atomState = true;
+//  }
 
   //print states of functions
   Serial.printf("%d,%i,%d\n", atomState, optionsCTR, modeState);
@@ -269,9 +300,6 @@ void loop()
 
   while(atomState == true)
   {
-//      recTemp();
-      Serial.printf("%d,%i,%d,%.2f,%.2f\n", atomState, optionsCTR, modeState, pitch, roll);
-      delayInterval(200);
       
       //get current pitch and roll
       M5.IMU.getAttitude(&pitch, &roll);
@@ -316,7 +344,7 @@ void loop()
 
           else if(modeState == true)
           {
-            Temp = readTemp();
+            Temp = currentTemp;
             //check if number is negative
             checkNegative(Temp);
             Temp=abs(Temp);
@@ -329,7 +357,7 @@ void loop()
       
             //display the unit (celsius)
             M5.dis.animation((uint8_t *)image_degree, 150, LED_DisPlay::kMoveLeft, 20);
-            delayInterval(1000);
+            delayInterval(700);
             M5.update();
           }
 
@@ -339,23 +367,34 @@ void loop()
     
         case 1: //Show average of last 24 hours of temperature + Units
         {
-          M5.dis.displaybuff((uint8_t *)image_num2W, 0, 0);
-          M5.update();
-
-          if(M5.Btn.wasPressed())
+          
+          if(modeState == false)
           {
-            modeState = true;
+            M5.dis.displaybuff((uint8_t *)image_num2W, 0, 0);
+            M5.update();
+
+            if(M5.Btn.wasPressed())
+            {
+              modeState = true;
+            } 
           }
 
           if(modeState == true)
           {
-            M5.dis.fillpix(0x0000FF);
-            M5.update();
-            delayInterval(500);
+            AveTemp = averageTemp;
+            checkNegative(AveTemp);
+            AveTemp = abs(AveTemp);
 
-            M5.dis.clear();
+            //display the number in the tens place
+            displayTens(TempTens, AveTemp);
+
+            //display number in the ones place
+            displayOnes(TempTens, AveTemp, TempOnes);
+      
+            //display the unit (celsius)
+            M5.dis.animation((uint8_t *)image_degree, 150, LED_DisPlay::kMoveLeft, 20);
+            delayInterval(700);
             M5.update();
-            delayInterval(500);
           }
 
           break;
@@ -364,8 +403,6 @@ void loop()
 
         case 2: //Show color scale of temperature range + current temperature as color
         {
-          M5.dis.displaybuff((uint8_t *)image_num3W, 0, 0);
-          M5.update();
 
           if(M5.Btn.wasPressed())
           {
@@ -373,40 +410,76 @@ void loop()
           }
 
           if(modeState == true)
+          
+           { 
+            M5.dis.displaybuff((uint8_t *)image_smallercolorscale, 0, 0);
+            M5.update();
+            delayInterval(500);
+            if (Temp<0)//violet
+            {
+               for (int i=0;i<=9;i++)
           {
-            M5.dis.fillpix(0x008000);
-            M5.update();
-            delayInterval(500);
-
-            M5.dis.clear();
-            M5.update();
-            delayInterval(500);
+              if (!leds[i])
+              {
+                M5.dis.drawpix(i, 0xff30b7);
+                
+              }
           }
+            }
+           }
+            else if (Temp<10) //blue
+            {
+               for (int i=0;i<=9;i++)
+          {
+              if (!leds[i])
+              {
+                M5.dis.drawpix(i, 0x2c41ff);
+                
+              }
+          }
+            }
+          else if (Temp<20) //green
+               {
+                for (int i=0;1<=1;i++)
+               
+          {
+              if (!leds[i])
+              {
+                M5.dis.drawpix(i, 0x1eff83);
+                
+              }
+          }
+          }
+          else if (Temp<30) //yellow
+          {
+                  for (int i=0;i<=9;i++)
+          {
+              if (!leds[i])
+              {
+                M5.dis.drawpix(i, 0xfcff35);
+                delay(100);
+              }
+          }
+          }
+          else //for the last red condition >30
+           {
+           for (int i=0;i<=9;i++)
+          {
+              if (!leds[i])
+              {
+                M5.dis.drawpix(i, 0xfcff35);
+                delay(100);
+              }
+          }
+           }
 
-          break;
-           
+           break;
         }
-
+                
+      
         case 3: //Show graph of temperature across a predefined range.
         {
-          M5.dis.displaybuff((uint8_t *)image_num4W, 0, 0);
-          M5.update();
-
-          if(M5.Btn.wasPressed())
-          {
-            modeState = true;
-          }
-
-          if(modeState == true)
-          {
-            M5.dis.fillpix(0x008000);
-            M5.update();
-            delayInterval(500);
-
-            M5.dis.clear();
-            M5.update();
-            delayInterval(500);
-          }
+          
 
           break;
            
@@ -439,17 +512,17 @@ void loop()
         
       }
 
-    if(roll > 10 && roll > pitch) //face down
+    if(roll > 15 && roll > pitch) //face down
     {
       modeState = false;
       atomState = false;
-    }
-  }
-
-
-    M5.dis.clear();
-    M5.update();
-    delayInterval(3300);
+      M5.dis.clear();
+      M5.update();
+      delayInterval(500);
   
+    }
 
-}
+    break;
+    
+  }
+        }
