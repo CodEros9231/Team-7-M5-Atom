@@ -1,4 +1,10 @@
+
+
+
 #include "M5Atom.h"
+
+#define NUM_LEDS 160
+CRGB leds[ NUM_LEDS ];
 
 extern const unsigned char image_num1W[77];
 extern const unsigned char image_num2W[77];
@@ -18,10 +24,11 @@ extern const unsigned char image_num8B[122];
 extern const unsigned char image_num9B[122];
 extern const unsigned char image_degree[152];
 extern const unsigned char image_degreeF[137];
+extern const unsigned char image_degreeCW[77];
+extern const unsigned char image_degreeFW[137];
 extern const unsigned char image_negative[122];
 extern const unsigned char image_smallercolorscale[77];
-#define NUM_LEDS 160
-CRGB leds[ NUM_LEDS ];
+
 bool IMU6886Flag = false;
 bool atomState = false;
 bool modeState = false;
@@ -61,7 +68,7 @@ unsigned long currentTime=0;
 void delayInterval(int num)
 { 
   currentTime=millis();
-  while (millis()<(currentTime+num))
+  while(millis()<(currentTime+num))
    {
       //do nothing
    }
@@ -102,10 +109,12 @@ void readTemp(float &currentTemp, float &averageTemp, int TempArray[])
   }
 }
 
-float convertF(int Temp)
+float convertF(float Temp)
 {
   float ftemp = 0;
   ftemp = ((9 * Temp) / 5) + 32;
+  Serial.print("The temperature in fahrenheit is ");
+  Serial.println(ftemp);    // print the average temperature value
   return ftemp;
 }
 
@@ -124,6 +133,17 @@ void checkNegative(int tempValue)
 //displays the unit in the tens place
 void displayTens(int &TempTens, int Temp)
 {
+          if(isCelsius == false)
+          {
+            if(Temp >= 100)
+            {
+              M5.dis.animation((uint8_t *)image_num1B, 150, LED_DisPlay::kMoveLeft, 20);
+              delayInterval(750);
+              M5.update();
+              Temp = Temp - 100;
+            }
+          }
+          
           //determine number in the tens place
             TempTens = (Temp / 10) % 10;
 
@@ -133,6 +153,10 @@ void displayTens(int &TempTens, int Temp)
               case 0:
               {
                   //if less than 10, display nothing
+                  if(isCelsius == false)
+                  {
+                    M5.dis.animation((uint8_t *)image_num0B, 150, LED_DisPlay::kMoveLeft, 20);
+                  }
                   break;
               }
 
@@ -198,6 +222,11 @@ void displayTens(int &TempTens, int Temp)
 //displays the unit in the ones place
 void displayOnes(int TempTens, int Temp, int &TempOnes)
 {
+  if(isCelsius == false)
+  {
+    Temp = Temp - 100;
+  }
+  
   TempOnes = Temp - (TempTens * 10);
       
             //display number in the ones place
@@ -291,7 +320,7 @@ void setup() {
 void loop() 
 {
 
-  readTemp(currentTemp, averageTemp);
+  readTemp(currentTemp, averageTemp, TempArray);
   
   M5.IMU.getAttitude(&pitch, &roll);
 
@@ -355,11 +384,14 @@ void loop()
 
           else if(modeState == true)
           {
-            Temp = currentTemp;
-            
-            if(isCelsius == false)
+            if(isCelsius == true)
             {
-              Temp = convertF(Temp);
+              Temp = currentTemp;
+            }
+            
+            else if(isCelsius == false)
+            {
+              Temp = convertF(currentTemp);
             }
             
             //check if number is negative
@@ -371,11 +403,22 @@ void loop()
 
             //display number in the ones place
             displayOnes(TempTens, Temp, TempOnes);
-      
+
+            //display the unit (fahrenheit)
+            if(isCelsius == false)
+            {
+              M5.dis.animation((uint8_t *)image_degreeF, 150, LED_DisPlay::kMoveLeft, 20);
+              delayInterval(700);
+              M5.update();
+            }
+            
             //display the unit (celsius)
-            M5.dis.animation((uint8_t *)image_degree, 150, LED_DisPlay::kMoveLeft, 20);
-            delayInterval(700);
-            M5.update();
+            else
+            {
+              M5.dis.animation((uint8_t *)image_degree, 150, LED_DisPlay::kMoveLeft, 20);
+              delayInterval(700);
+              M5.update();
+            }
           }
 
           break;
@@ -398,11 +441,17 @@ void loop()
 
           if(modeState == true)
           {
-            AveTemp = averageTemp;
-            if(isCelsius == false)
+
+            if(isCelsius == true)
             {
-              AveTemp = convertF(AveTemp);
+              AveTemp = averageTemp;
             }
+            
+            else if(isCelsius == false)
+            {
+              AveTemp = convertF(averageTemp);
+            }
+            
             checkNegative(AveTemp);
             AveTemp = abs(AveTemp);
 
@@ -412,10 +461,22 @@ void loop()
             //display number in the ones place
             displayOnes(TempTens, AveTemp, TempOnes);
       
+            //display the unit (fahrenheit)
+            if(isCelsius == false)
+            {
+              M5.dis.animation((uint8_t *)image_degreeF, 150, LED_DisPlay::kMoveLeft, 20);
+              delayInterval(700);
+              M5.update();
+            }
+            
             //display the unit (celsius)
-            M5.dis.animation((uint8_t *)image_degree, 150, LED_DisPlay::kMoveLeft, 20);
-            delayInterval(700);
-            M5.update();
+            else
+            {
+              M5.dis.animation((uint8_t *)image_degree, 150, LED_DisPlay::kMoveLeft, 20);
+              delayInterval(700);
+              M5.update();
+            }
+          
           }
 
           break;
@@ -425,9 +486,15 @@ void loop()
         case 2: //Show color scale of temperature range + current temperature as color
         {
 
-          if(M5.Btn.wasPressed())
+          if(modeState == false)
           {
-            modeState = true;
+            M5.dis.displaybuff((uint8_t *)image_num3W, 0, 0);
+            M5.update();
+  
+            if(M5.Btn.wasPressed())
+            {
+              modeState = true;
+            }
           }
 
           if(modeState == true)
@@ -436,71 +503,87 @@ void loop()
             M5.dis.displaybuff((uint8_t *)image_smallercolorscale, 0, 0);
             M5.update();
             delayInterval(500);
-            if (Temp<0)//violet
+            
+            if (currentTemp<0)//violet
             {
                for (int i=0;i<=9;i++)
-          {
-              if (!leds[i])
-              {
-                M5.dis.drawpix(i, 0xff30b7);
-                
-              }
-          }
-            }
-           }
-            else if (Temp<10) //blue
-            {
-               for (int i=0;i<=9;i++)
-          {
-              if (!leds[i])
-              {
-                M5.dis.drawpix(i, 0x2c41ff);
-                
-              }
-          }
-            }
-          else if (Temp<20) //green
                {
-                for (int i=0;1<=1;i++)
-               
-          {
-              if (!leds[i])
-              {
-                M5.dis.drawpix(i, 0x1eff83);
-                
-              }
-          }
-          }
-          else if (Temp<30) //yellow
-          {
-                  for (int i=0;i<=9;i++)
-          {
-              if (!leds[i])
-              {
-                M5.dis.drawpix(i, 0xfcff35);
-                delay(100);
-              }
-          }
-          }
-          else //for the last red condition >30
-           {
-           for (int i=0;i<=9;i++)
-          {
-              if (!leds[i])
-              {
-                M5.dis.drawpix(i, 0xfcff35);
-                delay(100);
-              }
-          }
+                  if (!leds[i])
+                  {
+                    M5.dis.drawpix(i, 0x30ff78);
+                    
+                  }
+               } 
+            }
+           
+            else if (currentTemp<10) //blue
+            {
+               for (int i=0;i<=9;i++)
+                {
+                  if (!leds[i])
+                  {
+                    M5.dis.drawpix(i, 0x2e41ff);
+                    
+                  }
+                 }
+            }
+            else if (currentTemp<20) //green
+               {
+                for (int i=0;i<=9;i++)
+                {
+                    if (!leds[i])
+                    {
+                      M5.dis.drawpix(i, 0xff1e9a);
+                      
+                    }
+                }
+                }
+                else if (currentTemp<30) //yellow
+                {
+                        for (int i=0;i<=9;i++)
+                {
+                    if (!leds[i])
+                    {
+                      M5.dis.drawpix(i, 0xfcff35);
+                    }
+                }
+                }
+                else //for the last red condition >30
+                 {
+                 for (int i=0;i<=9;i++)
+                {
+                    if (!leds[i])
+                    {
+                      M5.dis.drawpix(i, 0x008000);
+                    }
+                  }
+                }
            }
 
            break;
+           
         }
-                
-      
+
         case 3: //Show graph of temperature across a predefined range.
         {
-          
+          M5.dis.displaybuff((uint8_t *)image_num4W, 0, 0);
+          M5.update();
+
+          if(M5.Btn.wasPressed())
+          {
+            modeState = true;
+          }
+
+          if(modeState == true)
+          {
+            M5.dis.fillpix(0x008000);
+            M5.update();
+            delayInterval(500);
+
+            M5.dis.clear();
+            M5.update();
+            delayInterval(500);
+          }
 
           break;
            
@@ -508,12 +591,15 @@ void loop()
 
         case 4: //Change units
         {
-          M5.dis.displaybuff((uint8_t *)image_num5W, 0, 0);
-          M5.update();
-
-          if(M5.Btn.wasPressed())
+          if(modeState == false)
           {
-            modeState = true;
+            M5.dis.displaybuff((uint8_t *)image_num5W, 0, 0);
+            M5.update();
+
+            if(M5.Btn.wasPressed())
+            {
+              modeState = true;
+            }
           }
 
           if(modeState == true)
@@ -525,7 +611,7 @@ void loop()
                 {
                    unitCTR = 0; //reset counter
                 }
-                delayInterval(500); //so that no other values are read
+//                delayInterval(500); //so that no other values are read
               }
             
               else if(pitch > 10)
@@ -535,41 +621,45 @@ void loop()
                 {
                    unitCTR = 1; //reset counter
                 }
-                delayInterval(500); //so that no other values are read
+//                delayInterval(500); //so that no other values are read
               }
 
+                Serial.printf("%d,%i,%d\n", isCelsius, unitCTR, modeState);
+                delayInterval(500);
+              
               switch(unitCTR)
               {
-//                bool exitLoop = false;
                 case 0:
                 {
                   //display the unit (celsius)
-                  M5.dis.displaybuff((uint8_t *)image_degree, 0, 0);
+                  M5.dis.displaybuff((uint8_t *)image_degreeCW, 0, 0);
                   M5.update();
 
                   if(M5.Btn.wasPressed())
                   {
                     isCelsius = true;
+                    modeState = false;
                     break;
                   }
+                  break;
                 }
 
                 case 1:
                 {
-                  //display the unit (farenheit)
-                  M5.dis.displaybuff((uint8_t *)image_degreeF, 0, 0);
+                  //display the unit (fahrenheit)
+                  M5.dis.displaybuff((uint8_t *)image_degreeFW, 0, 0);
                   M5.update();
 
                   if(M5.Btn.wasPressed())
                   {
                     isCelsius = false;
+                    modeState = false;
                     break;
                   }
+                  break;
                 }
               }
           }
-
-          break;
            
         }
         
@@ -588,4 +678,11 @@ void loop()
     break;
     
   }
-        }
+
+
+//    M5.dis.clear();
+//    M5.update();
+//    delayInterval(500);
+  
+
+}
