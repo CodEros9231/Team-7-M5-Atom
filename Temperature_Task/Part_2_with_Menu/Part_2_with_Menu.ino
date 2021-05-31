@@ -17,6 +17,7 @@ extern const unsigned char image_num7B[122];
 extern const unsigned char image_num8B[122];
 extern const unsigned char image_num9B[122];
 extern const unsigned char image_degree[152];
+extern const unsigned char image_degreeF[137];
 extern const unsigned char image_negative[122];
 extern const unsigned char image_smallercolorscale[77];
 #define NUM_LEDS 160
@@ -43,12 +44,16 @@ float averageTemp = 0;
 unsigned long intervalTime = 0;
 bool resetInterval = false;
 
+
 int ctr = 0;
 int tempCounts=0;
 
 //declare values for units in tens and ones place
 int TempTens = 0;
 int TempOnes = 0;
+
+int unitCTR = 0;
+bool isCelsius = true;
 
 //double currentTime, lastUpdateTime, elapsed;
 unsigned long currentTime=0;
@@ -63,7 +68,7 @@ void delayInterval(int num)
 }
 
 //reads the temperature at a given interval
-void readTemp(float &currentTemp, float &averageTemp)
+void readTemp(float &currentTemp, float &averageTemp, int TempArray[])
 {
   if(resetInterval == false)
   {
@@ -97,6 +102,12 @@ void readTemp(float &currentTemp, float &averageTemp)
   }
 }
 
+float convertF(int Temp)
+{
+  float ftemp = 0;
+  ftemp = ((9 * Temp) / 5) + 32;
+  return ftemp;
+}
 
 //check if temperature value is negative
 void checkNegative(int tempValue)
@@ -284,15 +295,15 @@ void loop()
   
   M5.IMU.getAttitude(&pitch, &roll);
 
-  if((roll > -10 && roll < 0 && pitch > roll && pitch < 0) || M5.Btn.wasPressed()) //face up
+  if(roll > -10 && roll < 0 && pitch > roll && pitch < 0) //face up
   {
     atomState = true;
   }
 
-//  if(M5.Btn.wasPressed()) //button pressed
-//  {
-//    atomState = true;
-//  }
+  if(M5.Btn.wasPressed()) //button pressed
+  {
+    atomState = true;
+  }
 
   //print states of functions
   Serial.printf("%d,%i,%d\n", atomState, optionsCTR, modeState);
@@ -345,6 +356,12 @@ void loop()
           else if(modeState == true)
           {
             Temp = currentTemp;
+            
+            if(isCelsius == false)
+            {
+              Temp = convertF(Temp);
+            }
+            
             //check if number is negative
             checkNegative(Temp);
             Temp=abs(Temp);
@@ -382,6 +399,10 @@ void loop()
           if(modeState == true)
           {
             AveTemp = averageTemp;
+            if(isCelsius == false)
+            {
+              AveTemp = convertF(AveTemp);
+            }
             checkNegative(AveTemp);
             AveTemp = abs(AveTemp);
 
@@ -497,13 +518,55 @@ void loop()
 
           if(modeState == true)
           {
-            M5.dis.fillpix(0x008000);
-            M5.update();
-            delayInterval(500);
+              if(pitch < -10)
+              {
+                unitCTR++;
+                if (unitCTR >= 2) //if counter exceeds number of states
+                {
+                   unitCTR = 0; //reset counter
+                }
+                delayInterval(500); //so that no other values are read
+              }
+            
+              else if(pitch > 10)
+              {
+                unitCTR--;
+                if (unitCTR <= -1) //if counter exceeds number of states
+                {
+                   unitCTR = 1; //reset counter
+                }
+                delayInterval(500); //so that no other values are read
+              }
 
-            M5.dis.clear();
-            M5.update();
-            delayInterval(500);
+              switch(unitCTR)
+              {
+//                bool exitLoop = false;
+                case 0:
+                {
+                  //display the unit (celsius)
+                  M5.dis.displaybuff((uint8_t *)image_degree, 0, 0);
+                  M5.update();
+
+                  if(M5.Btn.wasPressed())
+                  {
+                    isCelsius = true;
+                    break;
+                  }
+                }
+
+                case 1:
+                {
+                  //display the unit (farenheit)
+                  M5.dis.displaybuff((uint8_t *)image_degreeF, 0, 0);
+                  M5.update();
+
+                  if(M5.Btn.wasPressed())
+                  {
+                    isCelsius = false;
+                    break;
+                  }
+                }
+              }
           }
 
           break;
