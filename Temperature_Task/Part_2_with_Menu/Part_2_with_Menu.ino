@@ -1,6 +1,3 @@
-
-
-
 #include "M5Atom.h"
 
 #define NUM_LEDS 160
@@ -32,8 +29,9 @@ extern const unsigned char image_smallercolorscale[77];
 bool IMU6886Flag = false;
 bool atomState = false;
 bool modeState = false;
-
+int counterArray=0;
 int optionsCTR = 0;
+double graphTemp[6];
 
 double start, finished, elapsed;
 double pitch, roll;
@@ -89,12 +87,28 @@ void readTemp(float &currentTemp, float &averageTemp, int TempArray[])
     M5.IMU.getTempData(&currentTemp);
     Serial.print("The temperature is ");
     Serial.println(currentTemp);    // print the temperature value
-
     TempArray[tempCounts] = currentTemp;
+    //if (tempCounts % 5 ==0)
+    {//filling the graphTempArray with latest
+      graphTemp[counterArray]=currentTemp;
+      counterArray++;
+      if (counterArray>=6)//replacing the values one by one
+      {counterArray=0;
+      graphTemp[0]=graphTemp[1];
+      graphTemp[1]=graphTemp[2];
+      graphTemp[2]=graphTemp[3];
+      graphTemp[3]=graphTemp[4];
+      graphTemp[4]=graphTemp[5];
+      
+      
+        }
+      }
+    
     SumofTemp += currentTemp;
     tempCounts++;
 
     averageTemp = SumofTemp / tempCounts;
+    
     Serial.print("The average temperature is ");
     Serial.println(averageTemp);    // print the average temperature value
 
@@ -573,16 +587,25 @@ void loop()
           {
             modeState = true;
           }
-
+          
           if(modeState == true)
           {
-            M5.dis.fillpix(0x008000);
-            M5.update();
-            delayInterval(500);
-
-            M5.dis.clear();
-            M5.update();
-            delayInterval(500);
+            for (int i=0;i<5; i++)
+            //allocating height according to color if red all rows of a column get filled
+            {if graphTemp[i]>30 graphtemp[i]=4
+            else if graphTemp[i]>20 graphtemp[i]=3
+            else if graphTemp[i]>10 graphtemp[i]=2
+            else if graphTemp[i]>0 graphtemp[i]=1
+            else if graphTemp[i]<0 graphtemp[i]=0
+            
+            {for (int j=20;j<=24;k++)
+            {for (int k=0;k<=graphTemp[i];k++)
+            { 
+              M5.dis.drawpix(j-5*k, 0x2e41ff);//making a histogram plot
+            }
+              }
+              }
+          }
           }
 
           break;
