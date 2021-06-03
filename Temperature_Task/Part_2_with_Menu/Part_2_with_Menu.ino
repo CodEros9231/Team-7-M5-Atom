@@ -1,8 +1,6 @@
 #include "M5Atom.h"
-
 #define NUM_LEDS 160
 CRGB leds[ NUM_LEDS ];
-
 extern const unsigned char image_num1W[77];
 extern const unsigned char image_num2W[77];
 extern const unsigned char image_num3W[77];
@@ -25,26 +23,19 @@ extern const unsigned char image_degreeCW[77];
 extern const unsigned char image_degreeFW[137];
 extern const unsigned char image_negative[122];
 extern const unsigned char image_smallercolorscale[77];
-
-bool IMU6886Flag = false;
-bool atomState = false;
-bool modeState = false;
-int counterArray=0;
-int optionsCTR = 0;
-double graphTemp[6];
-
-double start, finished, elapsed;
-double pitch, roll;
+bool IMU6886Flag =false, atomState=false,modeState=false;
+int counterArray=0,optionsCTR=0;
+double graphTemp[6],start, finished, elapsed,pitch, roll;
 
 //sets value of temperature, to be changed once temperature is actually read
-float temp = 0;
-int Temp = 0;
-int TempArray[8640];
-int SumofTemp=0;
-float AveTemp = 0;
+double temp = 0;
+double Temp = 0;
+double TempArray[8640];
+double SumofTemp=0;
+double AveTemp = 0;
 
 float currentTemp = 0;
-float averageTemp = 0;
+double averageTemp = 0;
 
 unsigned long intervalTime = 0;
 bool resetInterval = false;
@@ -73,7 +64,7 @@ void delayInterval(int num)
 }
 
 //reads the temperature at a given interval
-void readTemp(float &currentTemp, float &averageTemp, int TempArray[])
+void readTemp()
 {
   if(resetInterval == false)
   {
@@ -323,18 +314,19 @@ void setup() {
     Serial.println(currentTemp);    // print the temperature value
 
     TempArray[tempCounts] = currentTemp;
+    graphTemp[tempCounts] = currentTemp;
     SumofTemp += currentTemp;
     tempCounts++;
-
+    counterArray++;
     averageTemp = SumofTemp / tempCounts;
-    Serial.print("The average temperature is ");
-    Serial.println(averageTemp);    // print the average temperature value
+    //Serial.print("The average temperature is ");
+    //Serial.println(averageTemp);    // print the average temperature value
 }
 
 void loop() 
 {
 
-  readTemp(currentTemp, averageTemp, TempArray);
+  readTemp();
   
   M5.IMU.getAttitude(&pitch, &roll);
 
@@ -589,27 +581,28 @@ void loop()
           }
           
           if(modeState == true)
-          {
+          { M5.dis.clear();
             for (int i=0;i<5; i++)
-            //allocating height according to color if red all rows of a column get filled
-            {if graphTemp[i]>30 graphtemp[i]=4
-            else if graphTemp[i]>20 graphtemp[i]=3
-            else if graphTemp[i]>10 graphtemp[i]=2
-            else if graphTemp[i]>0 graphtemp[i]=1
-            else if graphTemp[i]<0 graphtemp[i]=0
             
-            {for (int j=20;j<=24;k++)
+            //allocating height according to color if red all rows of a column get filled
+            {Serial.println("graphtemp values is");
+           
+              if (graphTemp[i]<0) graphTemp[i]=0;
+            else if (graphTemp[i]<10) graphTemp[i]=1;
+            else if (graphTemp[i]<20) graphTemp[i]=2;
+            else if (graphTemp[i]<30) graphTemp[i]=3;
+            else if (graphTemp[i]>30) graphTemp[i]=4;
+             Serial.println(graphTemp[i]);
+            {for (int j=20;j<=24;j++)
             {for (int k=0;k<=graphTemp[i];k++)
             { 
-              M5.dis.drawpix(j-5*k, 0x2e41ff);//making a histogram plot
+              M5.dis.drawpix(j-(5*k), 0xff0000);//making a histogram plot
             }
               }
               }
           }
           }
-
-          break;
-           
+           break;
         }
 
         case 4: //Change units
