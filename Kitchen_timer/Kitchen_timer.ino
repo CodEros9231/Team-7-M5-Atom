@@ -370,6 +370,7 @@ void loop()
   if(roll > -10 && roll < 0 && pitch > roll && pitch < 0) //if face up
   {
     atomState = true;
+    delayInterval(300);
   }
 
   if(M5.Btn.wasPressed()) //button pressed
@@ -379,7 +380,6 @@ void loop()
 
   //print states of functions
 //  Serial.printf("%d,%i,%d\n", atomState, optionsCTR, modeState);
-  delayInterval(300);
 
   while(atomState == true)
   {
@@ -390,6 +390,7 @@ void loop()
 
       if(modeState == false)
       {
+          delayInterval(300);
           if(pitch < -10)
           {
             optionsCTR++;
@@ -397,7 +398,7 @@ void loop()
             {
                optionsCTR = 0; //reset counter
             }
-            delayInterval(500); //so that no other values are read
+//            delayInterval(500); //so that no other values are read
           }
         
           else if(pitch > 10)
@@ -407,7 +408,7 @@ void loop()
             {
                optionsCTR = 2; //reset counter
             }
-            delayInterval(500); //so that no other values are read
+//            delayInterval(500); //so that no other values are read
           }
       }
      
@@ -428,8 +429,8 @@ void loop()
 
           if(modeState == true)
           {
-            Serial.printf("%d\n", timerSet1);
-            delayInterval(300);
+//            Serial.printf("%d\n", timerSet1);
+//            delayInterval(300);
             if(timerSet1 == false)
             {
 
@@ -443,7 +444,7 @@ void loop()
                   {
                      unitCTR = 0; //reset counter
                   }
-  //                delayInterval(500); //so that no other values are read
+                  delayInterval(300);
                 }
               
                 else if(pitch > 10)
@@ -453,7 +454,7 @@ void loop()
                   {
                      unitCTR = 3; //reset counter
                   }
-  //                delayInterval(500); //so that no other values are read
+                  delayInterval(300);
                 }
               }
 
@@ -461,7 +462,7 @@ void loop()
               {
                 case 0: //hour
                 {
-
+                  delayInterval(300);
                   if(hourloop == false)
                   {
                       M5.dis.displaybuff((uint8_t *)image_hour, 0, 0);
@@ -518,6 +519,7 @@ void loop()
 
                   else if(minuteloop == true)
                   {
+                      delayInterval(300);
                       timeSelect = true;
                       //get current pitch and roll
                       M5.IMU.getAttitude(&pitch, &roll); 
@@ -561,6 +563,7 @@ void loop()
 
                   else if(secondloop == true)
                   {
+                      delayInterval(300);
                       timeSelect = true;
                       //get current pitch and roll
                       M5.IMU.getAttitude(&pitch, &roll); 
@@ -602,7 +605,7 @@ void loop()
 
                         //calculate the total times and intervals for the clock display
                         totalTime1 = (hourTimer1 * 3600) + (minuteTimer1 * 60) + secondTimer1;
-                        fracTime1 = (totalTime1 / 16) * 1000;
+                        fracTime1 = (totalTime1 / 15) * 1000;
                       }
                       break;
                   }
@@ -626,6 +629,7 @@ void loop()
                 {
                   countdown(secondTimer1, minuteTimer1, hourTimer1);
                   displayClock1(previousMillis, fracTime1);
+                  Serial.printf("%i:%i:%i\n", hourTimer1, minuteTimer1, secondTimer1);
                 }
 
               }
@@ -685,15 +689,15 @@ void loop()
       }
       }
 
-    if(roll > 15 && roll > pitch) //face down
-    {
-      modeState = false;
-      atomState = false;
-      M5.dis.clear();
-      M5.update();
-      delayInterval(500);
-  
-    }
+//    if(roll > 15 && roll > pitch) //HAD TO BE REMOVED BC OF LACK OF DELAY
+//    {
+//      modeState = false;
+//      atomState = false;
+//      M5.dis.clear();
+//      M5.update();
+//      delayInterval(500);
+//  
+//    }
 
     break;
     
