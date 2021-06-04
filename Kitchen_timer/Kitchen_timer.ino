@@ -41,11 +41,17 @@ bool timeSelect = false;
 int hourTimer1 = 0;
 int minuteTimer1 = 0;
 int secondTimer1 = 0;
+double totalTime1 = 0;
+double fracTime1 = 0;
+bool initiateDisplay1 = true;
 
 bool hourloop = false;
 bool minuteloop = false;
 bool secondloop = false;
 
+int interval=1000,x_1=1;
+int y_1=1,x2=0,y2=4,x3=4;
+unsigned long previousMillis = millis(),currentMillis;
 
 //double currentTime, lastUpdateTime, elapsed;
 unsigned long currentTime=0;
@@ -216,17 +222,26 @@ void countdown(int &seconds, int &minutes, int &hours)
   
   if(millis() >= intervalTime + 1000) //1 second timer
   {
-    if(seconds > 0)
+    if(seconds >= 0) //for every second
     {
       seconds--;
     }
+
+    if(seconds < 0 && minutes == 0 && hours > 0) //for every hour
+    {
+      hours--;
+      minutes = 59;
+      seconds = 59;
+    }
     
-    if(seconds == 0 && minutes > 0)
+    if(seconds < 0 && minutes > 0) //for every minute
     {
       minutes--;
       seconds = 59;
     }
-    else if(seconds == 0 && minutes == 0)
+
+    
+    else if(seconds < 0 && minutes == 0 && hours == 0) //when the timer reaches 0
     {
       bool snoozeTimer = false;
       while(snoozeTimer == false)
@@ -245,12 +260,98 @@ void countdown(int &seconds, int &minutes, int &hours)
       }
       }
     }
+    resetInterval = false;
   }
+}
 
-//  if(minutes >= 1)
-//  {
-//    
-//  }
+void initiateClockDisplay1()
+{
+  //------initial display of square lights------------
+    for (int x=0;x<5;x=x+4)
+    {
+      for (int y=0;y<5;y++)
+      {
+          M5.dis.drawpix(x,y,0xff0000);
+      } 
+    }
+    for (int y=0;y<5;y=y+4)
+      {
+      for (int x=0;x<5;x++)
+      {
+        M5.dis.drawpix(x,y,0xff0000);
+        } 
+      }
+}
+
+void displayClock1(int previousMilliseconds, double fractionTime)
+{
+  currentMillis=millis();
+  
+  if (x_1>-1) //for the first 2 lights
+  {
+   if(currentMillis-previousMillis >= fracTime1){ //for 1 second
+    M5.dis.drawpix(x_1,0,0x000000);
+        previousMillis= currentMillis;
+        (x_1)--;       
+       }
+  
+  goto label; //skip everything else
+    
+  }
+  
+  if (y_1<4)
+  {
+   if(currentMillis-previousMillis >= fracTime1)
+   {
+    M5.dis.drawpix(0,y_1,0x000000);
+          previousMillis=currentMillis;
+      (y_1)++; 
+   }
+   
+   goto label;
+  }
+  
+  
+  
+    if(x2<4)
+    {
+      
+    
+      
+       if(currentMillis-previousMillis >= fracTime1){
+        M5.dis.drawpix(x2,4,0x000000);
+          previousMillis=currentMillis;
+          x2++;
+      }
+   
+   goto label;   
+      }
+    
+  
+  
+  if (y2>0)
+  {
+   if(currentMillis-previousMillis>= fracTime1){
+      M5.dis.drawpix(4,y2,0x000000);
+         previousMillis=currentMillis;
+        y2--;   
+      }
+   
+   goto label;
+  }
+  
+  if (x3>=2)
+  { 
+   if(currentMillis-previousMillis >= fracTime1){
+    M5.dis.drawpix(x3,0,0x000000);
+          previousMillis=currentMillis;
+      x3--;
+      }
+    
+    goto label;
+    }
+  label:
+  ;
 }
 
 
@@ -497,6 +598,11 @@ void loop()
                       {
                         timerSet1 = true;
                         modeState = false;
+                        initiateDisplay1 = true;
+
+                        //calculate the total times and intervals for the clock display
+                        totalTime1 = (hourTimer1 * 3600) + (minuteTimer1 * 60) + secondTimer1;
+                        fracTime1 = (totalTime1 / 16) * 1000;
                       }
                       break;
                   }
@@ -508,52 +614,23 @@ void loop()
              
               else if (timerSet1 == true)
               {
-                countdown(secondTimer1, minuteTimer1, hourTimer1);
-                
-                if(hourTimer1 > 0)
+                if(initiateDisplay1 == true)
                 {
-                displayTime(hourTimer1);
-                M5.dis.animation((uint8_t *)image_hourB, 150, LED_DisPlay::kMoveLeft, 8);
-                M5.update();
+                  M5.dis.clear();
+                  initiateClockDisplay1();
+                  M5.update();
+                  initiateDisplay1 = false;
                 }
 
-                if(minuteTimer1 > 0)
-                {
-//                  int intervalTime2 = millis();
-//                  
-//                  if(millis() >= intervalTime2 + 5000) //1 second timer
-//                  {             
-                    displayTime(minuteTimer1);
-                    M5.dis.animation((uint8_t *)image_minuteB, 150, LED_DisPlay::kMoveLeft, 20);
-                    delayInterval(600);
-                    M5.update();
-
-                    displayTime(secondTimer1);
-                    M5.dis.animation((uint8_t *)image_secondB, 150, LED_DisPlay::kMoveLeft, 8);
-                    M5.update();
-
-                    
-//                  }
-                }
                 else
                 {
-//                  int intervalTime2 = millis();
-//                  
-//                  if(millis() >= intervalTime2 + 2000) //1 second timer
-//                  {  
-                  displayTime(secondTimer1);
-                  M5.dis.animation((uint8_t *)image_secondB, 150, LED_DisPlay::kMoveLeft, 8);
-                  M5.update();
-//                  }
+                  countdown(secondTimer1, minuteTimer1, hourTimer1);
+                  displayClock1(previousMillis, fracTime1);
                 }
-              }
 
-              
-            
+              }
             
           }
-          
-        
 
           break;
           
