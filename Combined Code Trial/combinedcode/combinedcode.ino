@@ -337,17 +337,17 @@ void displayClock1(int previousMilliseconds, double fractionTime)
 { 
   if (timerSet1==true)//newTime1 triggered whenever TotalTime1 received from other end
       {Timestamp1=millis();
-       timerSet1=false;
+//       timerSet1=false;
        TimerNumber = 1;
       }
       if (timerSet2==true)
       {Timestamp2=millis();
-      timerSet2=false;
+//      timerSet2=false;
       TimerNumber = 2;
       }
       interval1 = totalTime1/15; interval2=totalTime2/15;
       currentMillis1=millis();
-      if (currentMillis1-previousMillis1>=interval1)
+      if (currentMillis1-previousMillis1>=fractionTime)
       {noOfpastIntervals1++;
         previousMillis1=currentMillis1;
         }
@@ -360,14 +360,14 @@ void displayClock1(int previousMilliseconds, double fractionTime)
       {
       for (int i=0;i<noOfpastIntervals1;i++)
       {
-        M5.dis.drawpix(patternarray[i],0xff0000);
+        M5.dis.drawpix(patternarray[i],0x000000);
         }
       }
       if (TimerNumber==2)
       {
            for (int i=0;i<noOfpastIntervals2;i++)
       {
-        M5.dis.drawpix(patternarray[i],0xff0000);
+        M5.dis.drawpix(patternarray[i],0x000000);
         }
       }
 }
@@ -435,7 +435,7 @@ M5.IMU.getAttitude(&pitch, &roll); //Start recording pitch and roll values
 
       if(modeState == false)
       {
-          delayInterval(300);
+//          delayInterval(300);
           if(pitch < -10)
           {
             optionsCTR++;
@@ -443,7 +443,7 @@ M5.IMU.getAttitude(&pitch, &roll); //Start recording pitch and roll values
             {
                optionsCTR = 0; //reset counter
             }
-//            delayInterval(500); //so that no other values are read
+            delayInterval(300); //so that no other values are read
           }
         
           else if(pitch > 10)
@@ -453,7 +453,7 @@ M5.IMU.getAttitude(&pitch, &roll); //Start recording pitch and roll values
             {
                optionsCTR = 2; //reset counter
             }
-//            delayInterval(500); //so that no other values are read
+            delayInterval(300); //so that no other values are read
           }
       }
      
@@ -674,7 +674,7 @@ M5.IMU.getAttitude(&pitch, &roll); //Start recording pitch and roll values
                 {
                   countdown(secondTimer1, minuteTimer1, hourTimer1);
                   displayClock1(previousMillis, fracTime1);
-                  Serial.printf("%i:%i:%i\n", hourTimer1, minuteTimer1, secondTimer1);
+//                  Serial.printf("%i:%i:%i\n", hourTimer1, minuteTimer1, secondTimer1);
                 }
 
               }
