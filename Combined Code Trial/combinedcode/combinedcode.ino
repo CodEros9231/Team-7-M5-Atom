@@ -40,7 +40,12 @@ double fracTime1 = 0;
 bool initiateDisplay1 = true;
 bool timerSet1 = false;
 bool timeSelect = false;
+bool snoozeTimer1 = true;
 
+unsigned long currentMillisCount1 = 0, previousMillisCount1 = 0;
+unsigned long currentMillisCount2 = 0, previousMillisCount2 = 0;
+
+//FOR TIMER 2
 int hourTimer2 = 0;
 int minuteTimer2 = 0;
 int secondTimer2 = 0;
@@ -49,10 +54,12 @@ double fracTime2 = 0;
 bool initiateDisplay2 = true;
 bool timerSet2 = false;
 bool timeSelect2 = false;
+bool snoozeTimer2 = true;
+
 
 String DataCreate() {
     String RelayState = (RelayFlag)?"on":"off";
-    String Data = "<mark>"+String(hourTimer1)+"</mark>#<mark>"+String(minuteTimer1)+"</mark>#<mark>"+String(secondTimer1);
+    String Data = String(hourTimer1)+"#"+String(minuteTimer1)+"#"+String(secondTimer1)+"#"+String(hourTimer2)+"#"+String(minuteTimer2)+"#"+String(secondTimer2);
     return Data;
 }
 
@@ -259,17 +266,9 @@ void displayTime(int timer)
               
 }
 
-void countdown(int &seconds, int &minutes, int &hours)
+void countdown(int &seconds, int &minutes, int &hours, bool &snoozeTimer)
 {
-  if(resetInterval == false)
-  {
-    intervalTime = 0;
-    intervalTime = millis();
-    resetInterval = true;
-  }
-  
-  if(millis() >= intervalTime + 1000) //1 second timer
-  {
+
     if(seconds >= 0) //for every second
     {
       seconds--;
@@ -289,95 +288,58 @@ void countdown(int &seconds, int &minutes, int &hours)
     }
 
     
-    else if(seconds < 0 && minutes == 0 && hours == 0) //when the timer reaches 0
+    else if(seconds == 0 && minutes == 0 && hours == 0) //when the timer reaches 0
     {
-      bool snoozeTimer = false;
-      while(snoozeTimer == false)
-      {
-      M5.dis.fillpix(0xFFFFFF);
-      delayInterval(500);
-      M5.update();
-
-      M5.dis.clear();
-      delayInterval(500);
-      M5.update();
-
-      if(M5.Btn.wasPressed())
-      {
-        snoozeTimer = true;
-      }
-      }
-    }
-    resetInterval = false;
-  }
+      snoozeTimer = false;
+    }  
 }
 
-void initiateClockDisplay1()
+void initiateClockDisplay1(CRGB color)
 {
   //------initial display of square lights------------
   for (int x=0;x<5;x=x+4)
   {
     for (int y=0;y<5;y++)
     {
-        M5.dis.drawpix(x,y,0xff0000);
+        M5.dis.drawpix(x,y,color);
     } 
   }
   for (int y=0;y<5;y=y+4)
     {
     for (int x=0;x<5;x++)
     {
-      M5.dis.drawpix(x,y,0xff0000);
+      M5.dis.drawpix(x,y,color);
       } 
     }
 }
+
 int noOfpastIntervals1=0,noOfpastIntervals2=0,TimerNumber;
 unsigned long Timestamp1 = 0, Timestamp2 = 0, interval1, interval2;
 unsigned long previousMillis1=millis(),currentMillis1,previousMillis2=millis(),currentMillis2;
-void displayClock1(int previousMilliseconds, double fractionTime)
+
+void displayClock1(int timernumber, int noOfpastIntervals)
 { 
-  if (timerSet1==true)//newTime1 triggered whenever TotalTime1 received from other end
-      {Timestamp1=millis();
-//       timerSet1=false;
-       TimerNumber = 1;
-      }
-      if (timerSet2==true)
-      {Timestamp2=millis();
-//      timerSet2=false;
-      TimerNumber = 2;
-      }
-      interval1 = totalTime1/15; interval2=totalTime2/15;
-      currentMillis1=millis();
-      if (currentMillis1-previousMillis1>=fractionTime)
-      {noOfpastIntervals1++;
-        previousMillis1=currentMillis1;
-        }
-        currentMillis2=millis();
-      if (currentMillis2-previousMillis2>=interval2)
-      {noOfpastIntervals2++;
-      previousMillis2=currentMillis2;
-        }
-      if (TimerNumber==1)
+      if (timernumber==1)
       {
-      for (int i=0;i<noOfpastIntervals1;i++)
+      for (int i=0;i<noOfpastIntervals;i++)
       {
         M5.dis.drawpix(patternarray[i],0x000000);
         }
       }
-      if (TimerNumber==2)
+      if (timernumber==2)
       {
-           for (int i=0;i<noOfpastIntervals2;i++)
+           for (int i=0;i<noOfpastIntervals;i++)
       {
         M5.dis.drawpix(patternarray[i],0x000000);
         }
       }
 }
 
-
+int timerIndex = 1;
 
 void setup(){
     M5.begin(true, false, true);
     M5.IMU.Init();
-//    M5.dis.drawpix(0, 0xe0ffff);
     WiFi.softAP(ssid, password);
     Serial.print("AP SSID: ");
     Serial.println(ssid);
@@ -387,8 +349,56 @@ void setup(){
     Serial.println(WiFi.softAPIP());  //IP address assigned to your ESP
     server.on("/", handleRoot);
 
-    server.on("/on", []() {
+    server.on("/sendData", []() {
         RelayFlag = true;
+
+        if(server.arg("timer").toInt() == 1){
+          // start timer 1
+          
+          timerSet1 = true;
+          modeState = false;
+          initiateDisplay1 = true;
+
+          hourTimer1 = server.arg("hours").toInt();
+          minuteTimer1 = server.arg("mins").toInt();
+          secondTimer1 = server.arg("seconds").toInt();
+          
+          //calculate the total times and intervals for the clock display
+          totalTime1 = (hourTimer1 * 3600) + (minuteTimer1 * 60) + secondTimer1;
+          fracTime1 = (totalTime1 / 15) * 1000;
+          
+        }
+        
+        if(server.arg("timer").toInt() == 2){
+          // start timer 1
+          
+          timerSet2 = true;
+          modeState = false;
+          initiateDisplay2 = true;
+
+          hourTimer2 = server.arg("hours").toInt();
+          minuteTimer2 = server.arg("mins").toInt();
+          secondTimer2 = server.arg("seconds").toInt();
+          
+          //calculate the total times and intervals for the clock display
+          totalTime2 = (hourTimer2 * 3600) + (minuteTimer2 * 60) + secondTimer2;
+          fracTime2 = (totalTime2 / 15) * 1000;
+          
+        }
+        Serial.print("Timer: ");
+        Serial.print(server.arg("timer"));
+        
+        Serial.print(" Hours: ");
+        Serial.print(server.arg("hours"));
+
+        Serial.print(" Minutes: ");
+        Serial.print(server.arg("mins"));
+        
+        Serial.print(" Seconds: ");
+        Serial.println(server.arg("seconds"));
+
+        // start timerIndex
+        timerIndex++;
         server.send(200, "text/plain", DataCreate());
     });
 
@@ -406,10 +416,9 @@ void setup(){
 }
 
 void loop(){
-    M5.update();
-    server.handleClient();
 
-//PREVIOUSLOOP
+server.handleClient();
+
 M5.IMU.getAttitude(&pitch, &roll); //Start recording pitch and roll values
 
   if(roll > -10 && roll < 0 && pitch > roll && pitch < 0) //if face up
@@ -428,6 +437,71 @@ M5.IMU.getAttitude(&pitch, &roll); //Start recording pitch and roll values
 
   while(atomState == true)
   {
+
+    if(timerSet1 == true) //when timer 1 is counting down
+      {
+        if(snoozeTimer1 == true)
+        {
+        
+        currentMillisCount1 = millis();
+        if(currentMillisCount1 - previousMillisCount1 >= 970) //1 second timer
+        {
+            countdown(secondTimer1, minuteTimer1, hourTimer1, snoozeTimer1); //countdown
+            previousMillisCount1 = currentMillisCount1;
+        }
+//        Serial.printf("%i:%i:%i\n", hourTimer1, minuteTimer1, secondTimer1);
+        Timestamp1=millis(); //record the current time
+        currentMillis1=millis();
+            if (currentMillis1-previousMillis1>=fracTime1) 
+            {noOfpastIntervals1++;
+              previousMillis1=currentMillis1;
+              }
+        }
+
+         else
+         {
+            currentMillisCount1 = millis();
+            if(currentMillisCount1 - previousMillisCount1 >= 500) //1 second timer
+            {
+                M5.dis.clear();
+                M5.update();
+                M5.dis.fillpix(0xff0000);
+                M5.update();
+                previousMillis1=currentMillis1;
+            }
+
+            if(currentMillisCount1 - previousMillisCount1 >= 500) //1 second timer
+            {
+                M5.dis.clear();
+                M5.update();
+                previousMillis1=currentMillis1;
+            }
+
+            if(M5.Btn.wasPressed())
+            {
+              snoozeTimer1 = true;
+              timerSet1 = false;
+              modeState = false;
+            }
+          
+         }
+      }
+
+      if(timerSet2 == true) //when timer 1 is counting down
+      {
+        currentMillisCount2 = millis();
+        if(currentMillisCount2 - previousMillisCount2 >= 970) //1 second timer
+        {
+            countdown(secondTimer2, minuteTimer2, hourTimer2, snoozeTimer2); //countdown
+            previousMillisCount2 = currentMillisCount2;
+        }
+        Timestamp2=millis(); //record the current time
+        currentMillis2=millis();
+            if (currentMillis2-previousMillis2>=fracTime2) 
+            {noOfpastIntervals2++;
+              previousMillis2=currentMillis2;
+              }
+      }
       
       //get current pitch and roll
       M5.IMU.getAttitude(&pitch, &roll);
@@ -463,12 +537,244 @@ M5.IMU.getAttitude(&pitch, &roll); //Start recording pitch and roll values
         {
           if(modeState == false)
           {
+            M5.dis.displaybuff((uint8_t *)image_num2W, 0, 0);
+            M5.update();
+  
+            if(M5.Btn.wasPressed())
+            {
+              modeState = true;
+              TimerNumber = 2;
+            } 
+          }
+
+          if(modeState == true)
+          {
+            if(timerSet2 == false) //if the timer is not set
+            {
+
+              if(timeSelect2 == false) //if a unit of time isnt selected
+              {
+
+                if(pitch < -10)
+                {
+                  unitCTR++;
+                  if (unitCTR >= 4) //if counter exceeds number of states
+                  {
+                     unitCTR = 0; //reset counter
+                  }
+                  delayInterval(300);
+                }
+              
+                else if(pitch > 10)
+                {
+                  unitCTR--;
+                  if (unitCTR <= -1) //if counter exceeds number of states
+                  {
+                     unitCTR = 3; //reset counter
+                  }
+                  delayInterval(300);
+                }
+              }
+
+              switch(unitCTR)
+              {
+                case 0: //hour
+                {
+                  delayInterval(300);
+                  if(hourloop == false)
+                  {
+                      M5.dis.displaybuff((uint8_t *)image_hour, 0, 0);
+                      M5.update();
+
+                      if(M5.Btn.wasPressed())
+                      {
+                        hourloop = true;
+                      }
+                  }
+
+                  else if(hourloop == true)
+                  {
+                    timeSelect = true;
+                      //get current pitch and roll
+                      M5.IMU.getAttitude(&pitch, &roll); 
+                        if(pitch < -10)
+                        {
+                          hourTimer2++;
+                        }
+                      
+                        else if(pitch > 10)
+                        {
+                          if(hourTimer2 >= 0)
+                          {
+                            hourTimer2--;
+                          }
+                        }
+
+                        displayTime(hourTimer2);
+                        M5.dis.animation((uint8_t *)image_hourB, 150, LED_DisPlay::kMoveLeft, 12);
+                        M5.update();
+                        if(val >= 35 && val <= 50)
+                        {
+                          hourloop = false;
+                          timeSelect2 = false;
+                        } 
+                    }
+                    break;
+                 }
+
+                 case 1: //minute
+                 {
+                  if(minuteloop == false)
+                  {
+                      M5.dis.displaybuff((uint8_t *)image_minute, 0, 0);
+                      M5.update();
+
+                      if(M5.Btn.wasPressed())
+                      {
+                        minuteloop = true;
+                      }
+                  }
+
+                  else if(minuteloop == true)
+                  {
+                      delayInterval(300);
+                      timeSelect2 = true;
+                      //get current pitch and roll
+                      M5.IMU.getAttitude(&pitch, &roll); 
+                        if(pitch < -10)
+                        {
+                          minuteTimer2++;
+                        }
+                      
+                        else if(pitch > 10)
+                        {
+                          if(hourTimer2 >= 0)
+                          {
+                            minuteTimer2--;
+                          }
+                        }
+
+                        displayTime(minuteTimer2);
+                        M5.dis.animation((uint8_t *)image_minuteB, 150, LED_DisPlay::kMoveLeft, 8);
+                        M5.update();
+                        if(val >= 35 && val <= 50)
+                        {
+                          minuteloop = false;
+                          timeSelect2 = false;
+                        } 
+                    }
+                    break;
+                 }
+
+                 case 2: //seconds
+                 {
+                  if(secondloop == false)
+                  {
+                      M5.dis.displaybuff((uint8_t *)image_num5W, 0, 0);
+                      M5.update();
+
+                      if(M5.Btn.wasPressed())
+                      {
+                        secondloop = true;
+                      }
+                  }
+
+                  else if(secondloop == true)
+                  {
+                      delayInterval(300);
+                      timeSelect2 = true;
+                      //get current pitch and roll
+                      M5.IMU.getAttitude(&pitch, &roll); 
+                        if(pitch < -10)
+                        {
+                         secondTimer2++;
+                        }
+                      
+                        else if(pitch > 10)
+                        {
+                          if(secondTimer2 >= 0)
+                          {
+                            secondTimer2--;
+                          }
+                        }
+
+                        displayTime(secondTimer2);
+                        M5.dis.animation((uint8_t *)image_secondB, 150, LED_DisPlay::kMoveLeft, 12);
+                        M5.update();
+                        if(val >= 35 && val <= 50)
+                        {
+                          secondloop = false;
+                          timeSelect2 = false;
+                        } 
+                    }
+                    break;
+                 }
+
+                 case 3: //confirm
+                 {
+                      M5.dis.displaybuff((uint8_t *)image_confirm, 0, 0);
+                      M5.update();
+
+                      if(M5.Btn.wasPressed())
+                      {
+                        timerSet2 = true;
+                        modeState = false;
+                        initiateDisplay2 = true;
+
+                        //calculate the total times and intervals for the clock display
+                        totalTime2 = (hourTimer2 * 3600) + (minuteTimer2 * 60) + secondTimer2;
+                        fracTime2 = (totalTime2 / 15) * 1000;
+                      }
+                      break;
+                  }
+                }
+
+
+                 
+              }
+             
+              else if (timerSet2 == true)
+              {
+                if(initiateDisplay2 == true)
+                {
+                  M5.dis.clear();
+                  initiateClockDisplay1(0x008000);
+                  M5.update();
+                  initiateDisplay2 = false;
+                }
+
+                if(initiateDisplay2 == false)
+                {
+                  displayClock1(TimerNumber, noOfpastIntervals2);
+                  M5.update();
+                  if(M5.Btn.wasPressed())
+                    {
+                      modeState = false;
+                      initiateDisplay2 = true;
+                      M5.update();
+                    } 
+                }
+              }
+            
+          }
+
+          break;
+          
+        }
+    
+        case 1: //Timer 2
+        {
+          
+          if(modeState == false)
+          {
             M5.dis.displaybuff((uint8_t *)image_num1W, 0, 0);
             M5.update();
   
             if(M5.Btn.wasPressed())
             {
               modeState = true;
+//              timerView1 = true;
+              TimerNumber = 1;
             } 
           }
 
@@ -665,73 +971,56 @@ M5.IMU.getAttitude(&pitch, &roll); //Start recording pitch and roll values
                 if(initiateDisplay1 == true)
                 {
                   M5.dis.clear();
-                  initiateClockDisplay1();
+                  initiateClockDisplay1(0xff0000);
                   M5.update();
                   initiateDisplay1 = false;
                 }
 
                 if(initiateDisplay1 == false)
                 {
-                  countdown(secondTimer1, minuteTimer1, hourTimer1);
-                  displayClock1(previousMillis, fracTime1);
-//                  Serial.printf("%i:%i:%i\n", hourTimer1, minuteTimer1, secondTimer1);
+                  displayClock1(TimerNumber, noOfpastIntervals1);
+                  M5.update();
+                  if(M5.Btn.wasPressed())
+                    {
+                      modeState = false;
+                      initiateDisplay1 = true;
+                      M5.update();
+                    } 
                 }
-
               }
             
           }
 
           break;
-          
-        }
-    
-        case 1: //Timer 2
-        {
-          
-          if(modeState == false)
-          {
-            M5.dis.displaybuff((uint8_t *)image_num2W, 0, 0);
-            M5.update();
-
-            if(M5.Btn.wasPressed())
-            {
-              modeState = true;
-            } 
-          }
-
-          if(modeState == true)
-          {
-            
-          }
            
         }
 
-        case 2: //Reset
-        {
-
-          if(modeState == false)
-          {
-            M5.dis.displaybuff((uint8_t *)image_num3W, 0, 0);
-            M5.update();
-  
-            if(M5.Btn.wasPressed())
-            {
-              modeState = true;
-            }
-          }
-
-          if(modeState == true)
-          
-           { 
-           }
-           
-
-
-           break;
-           
-        
-        
-      }
+//        case 2: //Reset
+//        {
+//
+//          if(modeState == false)
+//          {
+//            M5.dis.displaybuff((uint8_t *)image_num3W, 0, 0);
+//            M5.update();
+//  
+//            if(M5.Btn.wasPressed())
+//            {
+//              modeState = true;
+//            }
+//          }
+//
+//          if(modeState == true)
+//          
+//           { 
+//           }
+//           
+//
+//
+//           break;
+//           
+//        
+//        
+//      }
       }
 
 //    if(roll > 15 && roll > pitch) //HAD TO BE REMOVED BC OF LACK OF DELAY
