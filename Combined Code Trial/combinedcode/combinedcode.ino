@@ -458,19 +458,19 @@ M5.IMU.getAttitude(&pitch, &roll); //Start recording pitch and roll values
               }
         }
 
-         else
+        if(snoozeTimer1 == false)
          {
+            M5.dis.clear();
+            M5.update();
             currentMillisCount1 = millis();
             if(currentMillisCount1 - previousMillisCount1 >= 500) //1 second timer
             {
-                M5.dis.clear();
-                M5.update();
                 M5.dis.fillpix(0xff0000);
                 M5.update();
-                previousMillis1=currentMillis1;
+//                previousMillis1=currentMillis1;
             }
 
-            if(currentMillisCount1 - previousMillisCount1 >= 500) //1 second timer
+            if(currentMillisCount1 - previousMillisCount1 >= 1000) //1 second timer
             {
                 M5.dis.clear();
                 M5.update();
