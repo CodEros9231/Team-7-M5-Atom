@@ -1,4 +1,5 @@
-
+//This code requires the M5Atom library and FastLED library
+//These can be downloaded by going to Manage Libraries and searching "M5Atom" and "FastLED"
 
 #include "M5Atom.h"
 #include "FastLED.h"
