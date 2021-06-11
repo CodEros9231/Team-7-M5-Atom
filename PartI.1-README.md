@@ -15,4 +15,4 @@ It has 5 modes:
 These modes can be toggled by clicking on the M5Stack Atom's screen button.
 
 The code required to run the program is called "Part_i_1.ino", located in the "Part_I_1" folder
-This code requires the "M5Atom.h" and "FastLED.h" libraries to be installed.
+This code requires the "M5Atom.h" and "FastLED.h" libraries to be installed on Arduino.
