@@ -18,14 +18,14 @@ void setup() //default start state of Atom
 uint8_t FSM = 0; //set counter for button presses
 
 
-void delayInterval(int num)
-{ 
-  currentTime=millis();
-  while (millis()<(currentTime+num))
-   {
-      //do nothing
-   }
-}
+//void delayInterval(int num)
+//{ 
+//  currentTime=millis();
+//  while (millis()<(currentTime+num))
+//   {
+//      //do nothing
+//   }
+//}
 
 void loop()
 {
