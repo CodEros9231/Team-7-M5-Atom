@@ -16,9 +16,13 @@ Once on, the user is presented with an interface with the following options:
 The user can tilt the device to the left or right to scroll through these options.
 
 If no times have been set yet, clicking on a timer option brings the user to another interface with these options when clicked:
+  
   H: Allows the user to set the number of hours to count down to
+ 
   M: Allows minutes to be set
+  
   S: Allows seconds to be set
+  
   ✓: Confirms the time selection and begins the timer
   
 The quantity of time can be added or subtracted by tilting the screen right or left respectively. To confirm the selection, the user must point the timer face-forward until they are returned to the H:M:S menu.
