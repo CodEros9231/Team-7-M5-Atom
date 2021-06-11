@@ -2,7 +2,7 @@ TEAM 7: DESIGN AND INNOVATION Jason Cruz, Tala Alouf, Eros Kuikel, Ma-sum Abdul-
 
 PART II: Kitchen Timer
 
-This code serves as a Kitchen Timer that works both with the M5 Stack Atom Matrix and on a Web Browser that can be accessed via a wifi network from the Atom. The device allows for 2 Timers to count down simultaneously. It can be set and viewed with both the M5 Stack Atom and Webpage.
+This code serves as a Kitchen Timer that works both with the M5 Stack Atom Matrix and on a Web Browser that can be accessed via a wifi network from the Atom. The device allows for 2 timers to count down simultaneously. It can be set and viewed with both the M5 Stack Atom and Webpage.
 
 The M5 Stack Atom is designed to be housed in a casing, along with a PCB and Battery which comprises the physical timer.
 
