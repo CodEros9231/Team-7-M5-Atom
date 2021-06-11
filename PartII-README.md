@@ -40,13 +40,15 @@ When the timer reaches zero, the Atom screen flashes until the user clicks the b
 SETTING TIME ON THE WEBPAGE:
 
 When using the webpage, the user is presented with two timers that display hours, minutes, and seconds (by default they are at 0). Timer 1 and 2 are still distinguished by the colors mentioned previously.
-There are6 buttons that allow the user to add or subtract time: a +1 and -1 for hours, minutes, and seconds. Their desired time is displayed in a smaller font above the buttons before confirmation. Once the time is confirmed, the user can click the "Set Timer" button in order to start the timer. This activates the timer and the countdown is displayed.
+There are 6 buttons that allow the user to add or subtract time: a +1 and -1 for hours, minutes, and seconds. Their desired time is displayed in a smaller font above the buttons before confirmation. Once the time is confirmed, the user can click the "Set Timer" button in order to start the timer. This activates the timer and the countdown is displayed.
 
 *Note: Starting the timer on the Atom also starts the timer on the webpage. The input values for hours, minutes, and seconds are updated automatically.
 
 
 
-WIFI Setup: In order to use the webpage, you must be connected to the WifiAP created by the Atom.
+WIFI Setup: 
+
+In order to use the webpage, you must be connected to the WifiAP created by the Atom.
   
   Wifi SSID: Team7
   
