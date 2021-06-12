@@ -587,11 +587,26 @@ void loop()
             //allocating height according to color if red all rows of a column get filled
             {Serial.println("graphtemp values is");
            
-              if (graphTemp[i]<0) graphTemp[i]=0;
-            else if (graphTemp[i]<10) graphTemp[i]=1;
-            else if (graphTemp[i]<20) graphTemp[i]=2;
-            else if (graphTemp[i]<30) graphTemp[i]=3;
-            else if (graphTemp[i]>30) graphTemp[i]=4;
+              if (currentTemp<0) 
+              {
+                graphTemp[i]=0;
+              }
+            else if (currentTemp<10) 
+            {
+              graphTemp[i]=1;
+            }
+            else if (currentTemp<20) 
+            {
+              graphTemp[i]=2;
+            }
+            else if (currentTemp<30) 
+            {
+              graphTemp[i]=3;
+            }
+            else if (currentTemp>30) 
+            {
+              graphTemp[i]=4;
+            }
              Serial.println(graphTemp[i]);
             {for (int j=20;j<=24;j++)
             {for (int k=0;k<=graphTemp[i];k++)
